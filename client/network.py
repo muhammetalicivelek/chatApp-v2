@@ -82,20 +82,29 @@ class NetworkManager:
     def send_chat_message(self, target_user, plain_message):
         if not self.password:
             return False, "Şifre (Anahtar) girilmemiş!"
-        if not self.socket:
-            return False, "Sunucu bağlantısı yok!"
+        
+        print(f"\n--- [Madde 8] MESAJ GÖNDERME İŞLEMİ ---")
+        print(f"1. Ham Mesaj: {plain_message}")
+        print(f"2. Kullanılan DES Anahtarı: {self.password}")
 
         try:
-            # Mesajı şifrele
+            # Madde 8: Mesajı DES ile şifrele
             encrypted_hex = security.encrypt_des(plain_message, self.password)
             if not encrypted_hex:
                 return False, "Şifreleme başarısız oldu."
+            
+            print(f"3. [Madde 8] DES Şifreli Hali (Hex): {encrypted_hex}")
 
+            # Madde 9: Server'a ilet
             req = protocol.create_msg(protocol.MSG_SEND, to=target_user, message=encrypted_hex)
             protocol.send_packet(self.socket, req)
+            print(f"4. [Madde 9] Sunucuya paket gönderildi.")
+            print(f"---------------------------------------")
             return True, "Gönderildi"
         except Exception as e:
             return False, f"Gönderme hatası: {e}"
+
+    # client/network.py dosyasındaki _listen_loop fonksiyonunu bununla değiştir:
 
     def _listen_loop(self):
         """Sürekli sunucuyu dinler"""
@@ -103,10 +112,8 @@ class NetworkManager:
             try:
                 if not self.socket: break
                 
-                # Protocol kütüphanesindeki recv_packet fonksiyonunu kullanıyoruz
                 data = protocol.recv_packet(self.socket)
-                if not data:
-                    break
+                if not data: break
                 
                 request = protocol.parse_msg(data)
                 msg_type = request.get("type")
@@ -115,11 +122,18 @@ class NetworkManager:
                     sender = request.get("sender")
                     encrypted_msg = request.get("message")
                     
+                    print(f"\n--- GELEN MESAJ ---")
+                    print(f"1. Gönderen: {sender}")
+                    print(f"2. Gelen Şifreli Veri: {encrypted_msg}")
+                    
                     # Gelen şifreli mesajı çöz
                     decrypted_text = security.decrypt_des(encrypted_msg, self.password)
                     if not decrypted_text:
                         decrypted_text = "[Şifre Çözülemedi - Anahtar Yanlış]"
-                    
+                        print(f"3. ❌ Şifre çözülemedi!")
+                    else:
+                        print(f"3. DES ile Çözüldü: {decrypted_text}")
+
                     self.callback("NEW_MESSAGE", {"sender": sender, "text": decrypted_text})
                 else:
                     self.callback(msg_type, request)
