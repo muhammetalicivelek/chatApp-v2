@@ -83,7 +83,7 @@ class NetworkManager:
         if not self.password:
             return False, "Şifre (Anahtar) girilmemiş!"
         
-        print(f"\n--- [Madde 8] MESAJ GÖNDERME İŞLEMİ ---")
+        print(f"\n---  MESAJ GÖNDERME İŞLEMİ ---")
         print(f"1. Ham Mesaj: {plain_message}")
         print(f"2. Kullanılan DES Anahtarı: {self.password}")
 
@@ -93,18 +93,16 @@ class NetworkManager:
             if not encrypted_hex:
                 return False, "Şifreleme başarısız oldu."
             
-            print(f"3. [Madde 8] DES Şifreli Hali (Hex): {encrypted_hex}")
+            print(f"3. DES Şifreli Hali (Hex): {encrypted_hex}")
 
             # Madde 9: Server'a ilet
             req = protocol.create_msg(protocol.MSG_SEND, to=target_user, message=encrypted_hex)
             protocol.send_packet(self.socket, req)
-            print(f"4. [Madde 9] Sunucuya paket gönderildi.")
+            print(f"4. Sunucuya paket gönderildi.")
             print(f"---------------------------------------")
             return True, "Gönderildi"
         except Exception as e:
             return False, f"Gönderme hatası: {e}"
-
-    # client/network.py dosyasındaki _listen_loop fonksiyonunu bununla değiştir:
 
     def _listen_loop(self):
         """Sürekli sunucuyu dinler"""

@@ -33,7 +33,7 @@ def handle_client(client_socket, address):
                 username = req.get("username")
                 img_hex = req.get("image_data")
                 print(f"\n[KAYIT] İstek: {username}")
-                print(f" ↳ [Madde 4] Görsel verisi alındı, geçici dosyaya yazılıyor...")
+                print(f" ↳ Görsel verisi alındı, geçici dosyaya yazılıyor...")
                 
                 os.makedirs("server/data", exist_ok=True)
                 tmp_path = f"server/data/temp_{username}.png"
@@ -48,7 +48,7 @@ def handle_client(client_socket, address):
                     print(" ❌ HATA: Görselde gizli şifre bulunamadı!")
                     protocol.send_packet(client_socket, protocol.create_msg(protocol.MSG_ERROR, message="Resimde şifre yok!"))
                 else:
-                    print(f" ✅ [Madde 4] Şifre Başarıyla Çıkarıldı: {extracted_pass}")
+                    print(f" ✅  Şifre Başarıyla Çıkarıldı: {extracted_pass}")
                     if db_manager.add_user(username, extracted_pass):
                         print(f" ✅ Kullanıcı Veritabanına Eklendi.")
                         protocol.send_packet(client_socket, protocol.create_msg("REGISTER_OK"))
@@ -57,7 +57,7 @@ def handle_client(client_socket, address):
                         print(f" ❌ Kullanıcı adı zaten var.")
                         protocol.send_packet(client_socket, protocol.create_msg(protocol.MSG_ERROR, message="Kullanıcı adı dolu."))
 
-            # --- GİRİŞ İŞLEMİ (Madde 7) ---
+            # --- GİRİŞ İŞLEMİ ---
             elif msg_type == protocol.MSG_LOGIN:
                 user = req.get("username")
                 pwd = req.get("password") # Client bunu şifreli yollamıyor, SSL yoksa riskli ama proje kuralı böyle
@@ -73,7 +73,7 @@ def handle_client(client_socket, address):
                     # Madde 7: Offline Mesajları İletme
                     offline_msgs = db_manager.get_offline_messages(user)
                     if offline_msgs:
-                        print(f" ↳ [Madde 7] {len(offline_msgs)} adet OFFLINE mesaj bulundu, iletiliyor...")
+                        print(f" ↳ {len(offline_msgs)} adet OFFLINE mesaj bulundu, iletiliyor...")
                         for msg in offline_msgs:
                             pkt = protocol.create_msg(protocol.MSG_INCOMING, sender=msg['sender'], message=msg['message'])
                             protocol.send_packet(client_socket, pkt)
@@ -98,13 +98,13 @@ def handle_client(client_socket, address):
                 plain = security.decrypt_des(encrypted_msg, sender_pass)
                 
                 if plain:
-                    print(f" ✅ [Madde 10] Gönderen ({current_user}) anahtarıyla mesaj çözüldü: '{plain}'")
+                    print(f" ✅ Gönderen ({current_user}) anahtarıyla mesaj çözüldü: '{plain}'")
                     
                     target_pass = db_manager.get_user_password(target)
                     if target_pass:
                         # 2. Alıcının şifresiyle tekrar şifrele (Madde 11)
                         re_encrypted = security.encrypt_des(plain, target_pass)
-                        print(f" 🔒 [Madde 11] Alıcı ({target}) anahtarıyla tekrar şifrelendi (Re-Encryption).")
+                        print(f" 🔒 Alıcı ({target}) anahtarıyla tekrar şifrelendi (Re-Encryption).")
                         
                         if target in active_clients:
                             pkt = protocol.create_msg(protocol.MSG_INCOMING, sender=current_user, message=re_encrypted)
@@ -113,7 +113,7 @@ def handle_client(client_socket, address):
                         else:
                             # Madde 6: Offline mesaj saklama
                             db_manager.add_offline_message(target, current_user, re_encrypted)
-                            print(f" 💾 [Madde 6] Hedef OFFLINE. Mesaj veritabanına kaydedildi.")
+                            print(f" 💾 Hedef OFFLINE. Mesaj veritabanına kaydedildi.")
                 else:
                     print(f" ❌ Şifre çözülemedi! Anahtar uyuşmazlığı.")
                 
